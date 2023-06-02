@@ -52,7 +52,8 @@ defmodule Webathn.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:nimble_totp, "~> 1.0"},
-      {:webauthn, "~> 0.0.8"}
+      {:webauthn, "~> 0.0.8"},
+      {:qrcode_ex, "~> 0.1.0"}
     ]
   end
 
