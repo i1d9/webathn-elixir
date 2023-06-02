@@ -77,3 +77,7 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+config :webathn, Webathn.WebauthApi,
+  relay_name: "Naylan",
+  relay_id: "localhost"

@@ -245,6 +245,7 @@ defmodule WebathnWeb.CoreComponents do
       <.button phx-click="go" class="ml-2">Send!</.button>
   """
   attr :type, :string, default: nil
+  attr :id, :string, required: true
   attr :class, :string, default: nil
   attr :rest, :global, include: ~w(disabled form name value)
 
@@ -253,6 +254,7 @@ defmodule WebathnWeb.CoreComponents do
   def button(assigns) do
     ~H"""
     <button
+      id={@id}
       type={@type}
       class={[
         "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
