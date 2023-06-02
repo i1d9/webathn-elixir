@@ -102,8 +102,6 @@ defmodule Webathn.WebauthApi do
          true <-
            decoded_challenge_from_client ==
              challenge_used_to_initiate_registration do
-      IO.inspect("bhhhhjjh")
-
       :ok
     else
       _ ->
