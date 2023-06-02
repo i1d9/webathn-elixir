@@ -2,6 +2,8 @@ defmodule WebathnWeb.UserSettingsLive do
   use WebathnWeb, :live_view
 
   alias Webathn.Accounts
+  alias Webathn.Accounts.User
+  alias Webathn.Otp
 
   def render(assigns) do
     ~H"""
@@ -25,10 +27,17 @@ defmodule WebathnWeb.UserSettingsLive do
           </:actions>
         </.simple_form>
       </div>
-      <div>
+      <div :if={!@current_user.authenticator_otp}>
+        <.button id="setup-otp" phx-click="setup" type="button">Setup OTP</.button>
 
-        
+        <div :if={@otp_qr}>
+          <%= raw(@otp_qr_data) %>
+          <.simple_form phx-submit="confirm-otp" for={@confirm_otp_form}>
+            <.input field={@confirm_otp_form[:otp]} type="text" label="OTP" required />
 
+            <.button id="confirm-otp-button">Confirm</.button>
+          </.simple_form>
+        </div>
       </div>
     </div>
     """
@@ -55,14 +64,54 @@ defmodule WebathnWeb.UserSettingsLive do
       socket
       |> assign(:email_form_current_password, nil)
       |> assign(:current_email, user.email)
+      |> assign(:otp_qr, false)
+      |> assign(:confirm_otp_form, nil)
+      |> assign(:otp_qr_data, nil)
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:trigger_submit, false)
 
     {:ok, socket}
   end
 
+  def handle_event("confirm-otp", %{"otp" => otp}, socket) do
+    socket =
+      with %Ecto.Changeset{
+             valid?: true
+           } = changeset <- confirm_otp_changeset(otp),
+           {:ok, data} <- Ecto.Changeset.apply_action(changeset, :validate),
+           true <- Otp.validate?(socket.assigns.current_user, data.otp),
+           {:ok, %Accounts.User{}} = user <-
+             User.update(socket.assigns.current_user, %{authenticator_otp: true}) do
+        socket
+        |> put_flash(:success, "Successfully registered")
+      else
+        false ->
+          socket |> put_flash(:error, "Invalid OTP")
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          socket
+
+        _ ->
+          socket
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("setup", _, socket) do
+    otp_qr_data = Otp.generate_qr(socket.assigns.current_user)
+    confirm_otp_changeset = confirm_otp_changeset(%{})
+
+    {:noreply,
+     assign(socket,
+       otp_qr_data: otp_qr_data,
+       otp_qr: true,
+       confirm_otp_form: confirm_otp_changeset |> to_form(as: :otp)
+     )}
+  end
+
   def handle_event("validate_email", params, socket) do
-    %{"current_password" => password, "user" => user_params} = params
+    %{"user" => user_params} = params
 
     email_form =
       socket.assigns.current_user
@@ -70,7 +119,7 @@ defmodule WebathnWeb.UserSettingsLive do
       |> Map.put(:action, :validate)
       |> to_form()
 
-    {:noreply, assign(socket, email_form: email_form, email_form_current_password: password)}
+    {:noreply, assign(socket, email_form: email_form)}
   end
 
   def handle_event("update_email", params, socket) do
@@ -91,5 +140,11 @@ defmodule WebathnWeb.UserSettingsLive do
       {:error, changeset} ->
         {:noreply, assign(socket, :email_form, to_form(Map.put(changeset, :action, :insert)))}
     end
+  end
+
+  defp confirm_otp_changeset(params) do
+    {%{otp: nil}, %{otp: :string}}
+    |> Ecto.Changeset.cast(params, [:otp])
+    |> Ecto.Changeset.validate_required([:otp])
   end
 end

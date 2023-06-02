@@ -81,3 +81,5 @@ config :swoosh, :api_client, false
 config :webathn, Webathn.WebauthApi,
   relay_name: "Naylan",
   relay_id: "localhost"
+
+config :webathn, Webathn.Otp, issuer: "Naylan"

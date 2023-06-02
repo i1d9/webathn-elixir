@@ -16,6 +16,18 @@ defmodule Webathn.Accounts.User do
     timestamps()
   end
 
+  def changeset(struct, params) do
+    struct
+    |> cast(params, [
+      :username,
+      :email,
+      :public_key,
+      :authenticator_otp,
+      :authenticator_secret,
+      :credential_id
+    ])
+  end
+
   def basic_info_changeset(attrs, opts \\ []) do
     %__MODULE__{}
     |> cast(attrs, [:email, :username])
@@ -67,7 +79,7 @@ defmodule Webathn.Accounts.User do
     if get_field(changeset, :authenticator_secret) do
       changeset
     else
-      secret = :crypto.strong_rand_bytes(32) |> Base.encode64()
+      secret = :crypto.strong_rand_bytes(32)
       put_change(changeset, :authenticator_secret, secret)
     end
   end
@@ -93,5 +105,10 @@ defmodule Webathn.Accounts.User do
   def confirm_changeset(user) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     change(user, confirmed_at: now)
+  end
+
+  def update(user, params) do
+    changeset(user, params)
+    |> Repo.update()
   end
 end

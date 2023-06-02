@@ -9,7 +9,7 @@ defmodule Webathn.Repo.Migrations.CreateUsersAuthTables do
       add :email, :citext, null: false
       add :public_key, :binary, null: false
       add :authenticator_otp, :boolean, default: false
-      add :authenticator_secret, :string
+      add :authenticator_secret, :binary
       add :credential_id, :string, null: false
       add :confirmed_at, :naive_datetime
       timestamps()
