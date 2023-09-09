@@ -17,15 +17,10 @@ defmodule Webathn.Accounts.User do
   end
 
   def changeset(struct, params) do
+
     struct
-    |> cast(params, [
-      :username,
-      :email,
-      :public_key,
-      :authenticator_otp,
-      :authenticator_secret,
-      :credential_id
-    ])
+    |> cast(params, [:username, :email, :public_key, :authenticator_otp, :authenticator_secret, :credential_id])
+
   end
 
   def basic_info_changeset(attrs, opts \\ []) do
